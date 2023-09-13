@@ -37,20 +37,20 @@ If CSV files containing custom relationships are provided, the script incorporat
 
 Here's an example of how to use this script to generate a C4 diagram:
 
-    ```bash
-    TITLE="My API Diagram" ENTERPRISE="MyCompany" ./convert.sh https://api.example.com/openapi.json relationships.csv
-    ```
+   ```bash
+   TITLE="My API Diagram" ENTERPRISE="MyCompany" ./convert.sh https://api.example.com/openapi.json relationships.csv
+   ```
 
 ## Custom Relationships (CSV Format)
 
 You can specify custom relationships between components by providing a CSV file. The CSV file format should be as follows:
 
-    ```csv
-    source_component,target_endpoint
-    ```
+   ```csv
+   source_component,target_endpoint
+   ```
 
-    source_component: The name of the source component.
-    target_endpoint: The id of the target endpoint
+source_component: The name of the source component.
+target_endpoint: The id of the target endpoint
 
 ## Output
 
@@ -58,9 +58,9 @@ The output of the script is a PlantUML file (e.g., output.puml) that represents 
 
 Some large diagrams don't render too well to png files (the default output of PlantUML). A workaround is to render to svg, and then use the tool of your choice to convert to png. eg
 
-    ```bash
-    plantuml -tsvg my-diagram.puml
-    ```
+   ```bash
+   plantuml -tsvg my-diagram.puml
+   ```
 
 ## License
 
