@@ -33,7 +33,8 @@ handle_openapi() {
 
 # Function to handle other URLs - consider these to be csv files containing relationships
 handle_rels() {
-  cat $1 | sed -e 's/\r//g' | sed -e 's/[^a-zA-Z0-9,]/_/g' |  sed 's/\([^,]*\),\([^,]*\)/Rel(\1,\2,"uses")/g'
+  cut -d "," -f 1 $1 | sed -e 's/[^a-zA-Z0-9,]/_/g' | sort | uniq | sed 's/\(.*\)/Component(\1,"\1")/g'
+  cat $1 | sed -e 's/\r//g' | sed -e 's/[^a-zA-Z0-9,]/_/g' |  sed 's/\([^,]*\),\([^,]*\)/Rel(\1,\2,"calls")/g'
 }
 
 cat <<EOF
