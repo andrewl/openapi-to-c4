@@ -6,6 +6,19 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
+# An array to store all the component ids, so we don't end up duplicating them
+componentIds=()
+
+# Function to check if we already have the component
+doesComponentExist() {
+    local id="$1"
+    for componentId in "${componentIds[@]}"; do
+        if [ "$id" == "$componentId" ]; then
+            return 1 # Field exists in the array
+        fi
+    done
+    return 0 # Field not found in the array
+}
 
 # Function to handle OpenAPI specs
 handle_openapi() {
@@ -27,13 +40,35 @@ handle_openapi() {
   # Extract each endpoint and add them as components within the container
   jq -r '.paths | to_entries[] | .key as $path | .value | to_entries[] | "    Component(" + ($path | gsub("[^a-zA-Z0-9]+"; "_") | ascii_downcase) + "_" + .key + ", \"" + .key + " " + $path + "\", \"" + .value.description + "\")"' $temp_file
 
+  # Extract the component ids and append to the componentIds array
+  output=$(jq -r '.paths | to_entries[] | .key as $path | .value | to_entries[] | ($path | gsub("[^a-zA-Z0-9]+"; "_") | ascii_downcase) + "_" + .key' "$temp_file")
+  IFS=$'\n' read -d '' -r -a array <<< "$output"
+
+  for element in "${array[@]}"; do
+    componentIds+=("$element")
+  done
+
   # Close the container boundary
   echo "}"
 }
 
 # Function to handle other URLs - consider these to be csv files containing relationships
 handle_rels() {
-  cut -d "," -f 1 $1 | sed -e 's/[^a-zA-Z0-9,]/_/g' | sort | uniq | sed 's/\(.*\)/Component(\1,"\1")/g'
+
+  # If we don't already have the component, then add it
+  # Process each line in the file and check if the field exists in the array
+  while IFS= read -r line; do
+    newComponentId=$(echo "$line" | cut -d "," -f 1) 
+
+    doesComponentExist "$newComponentId"
+    exists=$?
+
+    if [ "$exists" -eq 0 ]; then
+        echo "$newComponentId" | sed -e 's/[^a-zA-Z0-9,]/_/g' | sort | uniq | sed 's/\(.*\)/Component(\1,"\1")/g'
+    fi
+  done < $1
+
+  #cut -d "," -f 1 $1 | sed -e 's/[^a-zA-Z0-9,]/_/g' | sort | uniq | sed 's/\(.*\)/Component(\1,"\1")/g'
   cat $1 | sed -e 's/\r//g' | sed -e 's/[^a-zA-Z0-9,]/_/g' |  sed 's/\([^,]*\),\([^,]*\)/Rel(\1,\2,"calls")/g'
 }
 
